@@ -1,4 +1,10 @@
 # app/main.py
+from dotenv import load_dotenv
+load_dotenv()  # carregar antes de qualquer import que use variáveis de ambiente
+
+import os
+print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import translate

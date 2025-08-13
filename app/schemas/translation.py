@@ -7,9 +7,10 @@ class TranslationRequest(BaseModel):
     to_lang: str = Field(..., alias="to", description="Linguagem de destino")
     model: str = Field(..., description="Modelo de IA a ser usado (openai, claude, gemini)")
 
-    class Config:
-        allow_population_by_field_name = True
-        populate_by_name = True  # Compatível com Pydantic v2+
+    # Configuração compatível com Pydantic v2
+    model_config = {
+        "populate_by_name": True
+    }
 
 class TranslationResponse(BaseModel):
     translated_code: str

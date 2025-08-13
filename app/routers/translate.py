@@ -10,10 +10,22 @@ logger = logging.getLogger(__name__)
 
 @router.post("/translate", response_model=TranslationResponse)
 async def translate_code(request: TranslationRequest):
+    # Log para depuração
+    print("Request recebido do frontend:", request.dict())
+
+    # Verificar campos obrigatórios
+    missing_fields = [f for f, v in request.dict().items() if v is None or v == ""]
+    if missing_fields:
+        detail = f"Campos obrigatórios ausentes ou vazios: {', '.join(missing_fields)}"
+        logger.warning(detail)
+        raise HTTPException(status_code=400, detail=detail)
+
+    # Obter serviço de tradução
     service = get_provider_service(request.model)
-    
     if not service:
-        raise HTTPException(status_code=400, detail="Modelo de IA inválido.")
+        detail = f"Modelo de IA inválido: {request.model}"
+        logger.warning(detail)
+        raise HTTPException(status_code=400, detail=detail)
 
     try:
         translated_code = await service.translate_code(
@@ -23,8 +35,9 @@ async def translate_code(request: TranslationRequest):
         )
         cleaned_code = clean_code_response(translated_code)
         return TranslationResponse(translated_code=cleaned_code)
+
     except Exception as e:
-        logger.exception(f"Erro na tradução: {e}")
+        logger.exception(f"Erro ao processar tradução: {e}")
         raise HTTPException(
             status_code=500,
             detail="Erro ao processar tradução. Tente novamente mais tarde."
