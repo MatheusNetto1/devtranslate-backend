@@ -1,14 +1,9 @@
 # app/utils/formatters.py
+import re
+
 def clean_code_response(response: str) -> str:
-    """
-    Remove marcações de bloco de código (```lang ... ```) da resposta.
-    """
-    if response.startswith("```"):
-        lines = response.split("\n")
-        # Remove a primeira e a última linha se forem blocos de código
-        if lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines[-1].startswith("```"):
-            lines = lines[:-1]
-        return "\n".join(lines).strip()
-    return response.strip()
+    """Extrai apenas o código de dentro de blocos ``` se existir."""
+    if not response:
+        return ""
+    match = re.search(r"```(?:\w+)?\n([\s\S]*?)\n```", response)
+    return match.group(1).strip() if match else response.strip()
