@@ -14,3 +14,4 @@ class TranslationRequest(BaseModel):
 
 class TranslationResponse(BaseModel):
     translated_code: str
+    explanation: str
