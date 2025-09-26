@@ -12,12 +12,14 @@ logger = logging.getLogger(__name__)
 async def translate_code(request: TranslationRequest):
     print("Request recebido do frontend:", request.dict())
 
+    # Verificação de campos obrigatórios
     missing_fields = [f for f, v in request.dict().items() if v is None or v == ""]
     if missing_fields:
         detail = f"Campos obrigatórios ausentes ou vazios: {', '.join(missing_fields)}"
         logger.warning(detail)
         raise HTTPException(status_code=400, detail=detail)
 
+    # Seleciona serviço do provider
     service = get_provider_service(request.model)
     if not service:
         detail = f"Modelo de IA inválido: {request.model}"
@@ -25,25 +27,19 @@ async def translate_code(request: TranslationRequest):
         raise HTTPException(status_code=400, detail=detail)
 
     try:
-        # Se for Gemini, retorna código + explicação
-        if request.model.lower() in ["gemini", "google"]:
-            translated_code, explanation = await service.translate_code(
-                code=request.code,
-                from_lang=request.from_lang,
-                to_lang=request.to_lang
-            )
-        else:
-            # Outros modelos só retornam o código
-            translated_code = await service.translate_code(
-                code=request.code,
-                from_lang=request.from_lang,
-                to_lang=request.to_lang
-            )
-            explanation = "Tradução realizada. Este modelo não fornece explicação detalhada."
+        translated_code, explanation = await service.translate_code(
+            code=request.code,
+            from_lang=request.from_lang,
+            to_lang=request.to_lang
+        )
 
+        # Limpa o código dos blocos ``` se necessário
         cleaned_code = clean_code_response(translated_code)
 
-        return TranslationResponse(translated_code=cleaned_code, explanation=explanation)
+        return TranslationResponse(
+            translated_code=cleaned_code,
+            explanation=explanation
+        )
 
     except Exception as e:
         logger.exception(f"Erro ao processar tradução: {e}")
@@ -51,4 +47,3 @@ async def translate_code(request: TranslationRequest):
             status_code=500,
             detail="Erro ao processar tradução. Tente novamente mais tarde."
         )
-
